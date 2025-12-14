@@ -1,6 +1,7 @@
 use anyhow::{Result, anyhow};
 use native_tls::TlsConnector;
 use std::net::TcpStream;
+use std::io::Cursor;
 
 use crate::config::MailConfig;
 use crate::mail::MessageSummary;
@@ -104,8 +105,7 @@ pub fn fetch_body_plain(cfg: &MailConfig, uid: u32) -> Result<String> {
     let f = fetches.iter().next().ok_or_else(|| anyhow!("no fetch result"))?;
     let raw = f.body().ok_or_else(|| anyhow!("no body"))?;
 
-    let parsed = mailparse::parse_mail(raw)?;
-    let text = extract_text_plain(&parsed);
+    let text = extract_body_with_html_fallback(raw)?;
 
     let _ = sess.logout();
     Ok(text)
@@ -132,4 +132,44 @@ fn extract_text_plain(m: &mailparse::ParsedMail) -> String {
     }
 
     String::new()
+}
+
+fn find_mime_part<'a>(m: &'a mailparse::ParsedMail, mime: &str) -> Option<&'a mailparse::ParsedMail<'a>> {
+    if m.ctype.mimetype.eq_ignore_ascii_case(mime) {
+        return Some(m);
+    }
+    for sp in &m.subparts {
+        if let Some(p) = find_mime_part(sp, mime) {
+            return Some(p);
+        }
+    }
+    None
+}
+
+fn extract_body_with_html_fallback(raw: &[u8]) -> Result<String> {
+    let parsed = mailparse::parse_mail(raw)?;
+
+    if let Some(p) = find_mime_part(&parsed, "text/plain") {
+        if let Ok(s) = p.get_body() {
+            if !s.trim().is_empty() {
+                return Ok(s);
+            }
+        }
+    }
+
+    if let Some(p) = find_mime_part(&parsed, "text/html") {
+        let html = p.get_body().unwrap_or_default();
+        if !html.trim().is_empty() {
+            let text = html2text::from_read(Cursor::new(html.as_bytes()), 80);
+            return Ok(text?);
+        }
+    }
+
+    if let Ok(s) = parsed.get_body() {
+        if !s.trim().is_empty() {
+            return Ok(s);
+        }
+    }
+
+    Ok(String::from_utf8_lossy(raw).to_string())
 }
