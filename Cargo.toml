@@ -1,6 +1,6 @@
 [package]
 name = "zenmail"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Zen Mail Client is a minimal TUI mail client for people who still use email to talk to humans."
 license = "MPL-2.0"

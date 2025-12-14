@@ -2,7 +2,7 @@
 
 **Zen Mail Client** is a minimal TUI mail client for people who still use email to talk to humans.
 
-It focuses on reading and replying to plain text emails over standard **IMAP / SMTP**, without HTML rendering, trackers, or unnecessary complexity.
+It focuses on reading and replying to plain text emails over standard IMAP / SMTP, with a text-first approach and a minimal HTML-to-text fallback, without HTML rendering, trackers, or unnecessary complexity.
 
 ---
 
