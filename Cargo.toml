@@ -2,7 +2,12 @@
 name = "zenmail"
 version = "0.1.0"
 edition = "2021"
+description = "Zen Mail Client is a minimal TUI mail client for people who still use email to talk to humans."
 license = "MPL-2.0"
+readme = "README.md"
+homepage = "https://github.com/wavefnd/zenmail"
+repository = "https://github.com/wavefnd/zenmail"
+keywords = ["emailclient", "mailclient", "email", "mail"]
 
 [dependencies]
 ratatui = "0.26.3"
